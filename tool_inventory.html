@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Inventory Management</title>
+  <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f9f9f9;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: #ff4b4b;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .action-button.add {
+            background-color: #28a745;
+        }
+
+        .action-button.subtract {
+            background-color: #dc3545;
+        }
+
+        .action-button:hover.add {
+            background-color: #218838;
+        }
+
+        .action-button:hover.subtract {
+            background-color: #c82333;
+        }
+
+        .request-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #ff4b4b;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+
+        .request-button:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Tool Inventory Management</h2>
+  <form id="toolForm">
+    <input type="text" id="toolName" placeholder="Tool Name" required>
+    <input type="number" id="toolQuantity" placeholder="Tool Quantity" required>
+    <button type="submit">Add Tool</button>
+  </form>
+  <table>
+    <thead>
+    <tr>
+      <th>Tool Name</th>
+      <th>Tool Quantity</th>
+      <th>Action</th>
+    </tr>
+    </thead>
+    <tbody id="toolTableBody">
+    </tbody>
+  </table>
+  <button class="request-button" onclick="requestItem()">Request Item</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        loadToolsFromLocalStorage();
+    });
+
+    document.getElementById('toolForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const toolName = document.getElementById('toolName').value;
+        const toolQuantity = document.getElementById('toolQuantity').value;
+
+        if (toolName && toolQuantity) {
+            addToolToTable(toolName, toolQuantity);
+            saveToolToLocalStorage(toolName, toolQuantity);
+
+            // Clear form fields
+            document.getElementById('toolName').value = '';
+            document.getElementById('toolQuantity').value = '';
+        }
+    });
+
+    function addToolToTable(toolName, toolQuantity) {
+        const tableBody = document.getElementById('toolTableBody');
+        const newRow = document.createElement('tr');
+
+        const nameCell = document.createElement('td');
+        nameCell.textContent = toolName;
+        newRow.appendChild(nameCell);
+
+        const quantityCell = document.createElement('td');
+        quantityCell.textContent = toolQuantity;
+        newRow.appendChild(quantityCell);
+
+        const actionCell = document.createElement('td');
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'action-buttons';
+
+        const addButton = document.createElement('button');
+        addButton.textContent = 'Add';
+        addButton.className = 'action-button add';
+        addButton.onclick = function() { updateQuantity(addButton, 1); };
+
+        const subtractButton = document.createElement('button');
+        subtractButton.textContent = 'Subtract';
+        subtractButton.className = 'action-button subtract';
+        subtractButton.onclick = function() { updateQuantity(subtractButton, -1); };
+
+        actionButtons.appendChild(addButton);
+        actionButtons.appendChild(subtractButton);
+        actionCell.appendChild(actionButtons);
+        newRow.appendChild(actionCell);
+
+        tableBody.appendChild(newRow);
+    }
+
+    function updateQuantity(button, amount) {
+        const row = button.closest('tr');
+        const quantityCell = row.querySelector('td:nth-child(2)');
+        let quantity = parseInt(quantityCell.textContent);
+        quantity += amount;
+        if (quantity < 0) quantity = 0; // Prevent negative quantities
+        quantityCell.textContent = quantity;
+
+        // Update local storage
+        const toolName = row.querySelector('td:nth-child(1)').textContent;
+        saveToolToLocalStorage(toolName, quantity);
+    }
+
+    function requestItem() {
+        const rows = document.querySelectorAll('#toolTableBody tr');
+        const requestedItems = [];
+
+        rows.forEach(row => {
+            const toolName = row.querySelector('td:nth-child(1)').textContent;
+            const toolQuantity = row.querySelector('td:nth-child(2)').textContent;
+            const request = {
+                id: generateUniqueId(),
+                name: toolName,
+                quantity: toolQuantity,
+                requestedBy: 'User',
+                date: new Date().toLocaleDateString()
+            };
+            requestedItems.push(request);
+        });
+
+        localStorage.setItem('requestedItems', JSON.stringify(requestedItems));
+        window.location.href = 'requested-tools.html';
+    }
+
+    function generateUniqueId() {
+        return Math.random().toString(36).substr(2, 9);
+    }
+
+    function saveToolToLocalStorage(toolName, toolQuantity) {
+        let tools = JSON.parse(localStorage.getItem('tools')) || [];
+        const existingToolIndex = tools.findIndex(tool => tool.name === toolName);
+        if (existingToolIndex !== -1) {
+            tools[existingToolIndex].quantity = toolQuantity;
+        } else {
+            tools.push({ name: toolName, quantity: toolQuantity });
+        }
+        localStorage.setItem('tools', JSON.stringify(tools));
+        console.log("Saved tools to localStorage:", tools); // Debug logging
+    }
+
+    function loadToolsFromLocalStorage() {
+        const tools = JSON.parse(localStorage.getItem('tools')) || [];
+        tools.forEach(tool => {
+            addToolToTable(tool.name, tool.quantity);
+        });
+        console.log("Loaded tools from localStorage:", tools); // Debug logging
+    }
+</script>
+
+</body>
+</html>

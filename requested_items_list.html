@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervisor - Requested Items List</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .action-button {
+            padding: 8px 12px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .add-button {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .subtract-button {
+            background-color: #ff4b4b;
+            color: white;
+        }
+
+        .add-button:hover {
+            background-color: #45a049;
+        }
+
+        .subtract-button:hover {
+            background-color: #cc0000;
+        }
+
+        .confirm-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+
+        .confirm-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Requested Items List</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Tool Name</th>
+            <th>Tool Quantity</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="requestedItemsTableBody">
+        <!-- Items will be populated here dynamically -->
+        </tbody>
+    </table>
+    <button class="confirm-button" onclick="confirmRequests()">Confirm</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableBody = document.getElementById('requestedItemsTableBody');
+        const requests = JSON.parse(localStorage.getItem('toolRequests')) || [];
+
+        requests.forEach(request => {
+            const newRow = document.createElement('tr');
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = request.toolName;
+            newRow.appendChild(nameCell);
+
+            const quantityCell = document.createElement('td');
+            quantityCell.textContent = request.toolQuantity;
+            newRow.appendChild(quantityCell);
+
+            const actionCell = document.createElement('td');
+            
+            const addButton = document.createElement('button');
+            addButton.textContent = '+';
+            addButton.className = 'action-button add-button';
+            addButton.onclick = function() {
+                request.toolQuantity++;
+                quantityCell.textContent = request.toolQuantity;
+                updateLocalStorage(requests);
+            };
+            actionCell.appendChild(addButton);
+            
+            const subtractButton = document.createElement('button');
+            subtractButton.textContent = '-';
+            subtractButton.className = 'action-button subtract-button';
+            subtractButton.onclick = function() {
+                if (request.toolQuantity > 0) {
+                    request.toolQuantity--;
+                    quantityCell.textContent = request.toolQuantity;
+                    updateLocalStorage(requests);
+                }
+            };
+            actionCell.appendChild(subtractButton);
+            
+            newRow.appendChild(actionCell);
+
+            tableBody.appendChild(newRow);
+        });
+    });
+
+    function confirmRequests() {
+        const requests = JSON.parse(localStorage.getItem('toolRequests')) || [];
+        if (requests.length === 0) {
+            alert('No tools requested.');
+            return;
+        }
+
+        localStorage.setItem('confirmedRequests', JSON.stringify(requests));
+
+        alert('Your request is confirmed.');
+    }
+
+    function updateLocalStorage(requests) {
+        localStorage.setItem('toolRequests', JSON.stringify(requests));
+    }
+</script>
+
+</body>
+</html>
